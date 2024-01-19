@@ -17,11 +17,10 @@
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
   background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+    to bottom right,
+    rgb(3, 3, 68),rgb(0, 0, 0)
+  );  
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
