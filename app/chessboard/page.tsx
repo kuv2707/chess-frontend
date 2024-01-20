@@ -35,7 +35,16 @@ function fenString(board: string[][], turn: string) {
 	}
 	return fen;
 }
-
+function fileName(piece: string) {
+	if (piece === "") {
+		return "";
+	}
+	return (
+		(piece.toLowerCase() === piece ? "b" : "w") +
+		piece.toLowerCase() +
+		".svg"
+	);
+}
 export default function ChessBoard() {
 	//replace with api call
 	const [board, setBoard] = useState([
@@ -72,11 +81,16 @@ export default function ChessBoard() {
 				setAllPieceMoves(data);
 			});
 	}, [board, turn]);
-
-	function squareColor(index: number) {
+	function markingColor(index: number) : "kill" | "move" | null{
 		if (selectedPieceDests.includes(index)) {
-			return "bg-green-500";
+			if (board[Math.floor(index / 8)][index % 8] != "") {
+				return "kill" as const;
+			}
+			return "move" as const;
 		}
+		return null;
+	}
+	function squareColor(index: number) {
 		if (selectedSquare == index) {
 			return "bg-green-500";
 		}
@@ -114,40 +128,18 @@ export default function ChessBoard() {
 			);
 		}
 	}
-	function fileName(piece: string) {
-		if (piece === "") {
-			return "";
-		}
-		return (
-			(piece.toLowerCase() === piece ? "b" : "w") +
-			piece.toLowerCase() +
-			".svg"
-		);
-	}
+
 	return (
 		<div className="grid grid-cols-8 gap-0 border-red w-96 m-5 border-r-amber-200 rounded-xl overflow-hidden">
 			{board.flat().map((piece, index) => (
-				<div
+				<BoardSquare
 					key={index}
-					className={`w-12 h-12 ${squareColor(index)}`}
-					onClick={() => handleSelectSquare(index)}
-					onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) =>
-						(e.currentTarget.style.filter = "brightness(1.5)")
-					}
-					onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) =>
-						(e.currentTarget.style.filter = "brightness(1)")
-					}
-				>
-					{piece && (
-						<Image
-							draggable={false}
-							src={"/images/pieces/" + fileName(piece)}
-							alt={piece}
-							width={50}
-							height={50}
-						></Image>
-					)}
-				</div>
+					piece={piece}
+					index={index}
+					squareColor={squareColor}
+					handleSelectSquare={handleSelectSquare}
+					marking={markingColor(index)}
+				/>
 			))}
 		</div>
 	);
@@ -157,4 +149,54 @@ function encodePos(pos: string) {
 	let x = pos.charCodeAt(0) - 97;
 	let y = 8 - parseInt(pos[1]);
 	return x + y * 8;
+}
+
+function BoardSquare({
+	piece,
+	index,
+	squareColor,
+	handleSelectSquare,
+	marking,
+}: {
+	piece: string;
+	index: number;
+	squareColor: Function;
+	handleSelectSquare: Function;
+	marking: string | null;
+}) {
+	function radGrad(marking: string | null) {
+		if (marking === "kill") {
+			return "radial-gradient(circle, rgba(255,0,0,1) 20%, rgba(255,0,0,0) 30%)";
+		}
+		if (marking === "move") {
+			return "radial-gradient(circle, rgba(0,190,0,1) 20%, rgba(0,255,0,0) 30%)";
+		}
+		return "";
+	}
+	return (
+		<div
+			key={index}
+			className={`w-12 h-12 ${squareColor(index)}`}
+			style={{
+				backgroundImage: radGrad(marking),
+			}}
+			onClick={() => handleSelectSquare(index)}
+			onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) =>
+				(e.currentTarget.style.filter = "brightness(1.5)")
+			}
+			onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) =>
+				(e.currentTarget.style.filter = "brightness(1)")
+			}
+		>
+			{piece && (
+				<Image
+					draggable={false}
+					src={"/images/pieces/" + fileName(piece)}
+					alt={piece}
+					width={50}
+					height={50}
+				></Image>
+			)}
+		</div>
+	);
 }
