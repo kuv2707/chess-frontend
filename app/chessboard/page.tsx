@@ -65,9 +65,8 @@ export default function ChessBoard() {
 	const [checkMate, setCheckMate] = useState(false);
 	const [winner, setWinner] = useState(null);
 	const [lastMove, setLastMove] = useState([]);
-
 	useEffect(() => {
-		fetch("http://localhost:5000/piecewisemoves", {
+		fetch(process.env.NEXT_PUBLIC_CHESS_ENGINE_URL+"piecewisemoves", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -159,6 +158,8 @@ function TurnLabel({turn}:{turn: string}){
 		</label>
 	);
 }
+
+
 
 function encodePos(pos: string) {
 	let x = pos.charCodeAt(0) - 97;
