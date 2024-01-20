@@ -67,7 +67,7 @@ export default function ChessBoard() {
 	const [lastMove, setLastMove] = useState([]);
 
 	useEffect(() => {
-		fetch("http://localhost:8000/piecewisemoves", {
+		fetch("http://localhost:5000/piecewisemoves", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -130,18 +130,33 @@ export default function ChessBoard() {
 	}
 
 	return (
-		<div className="grid grid-cols-8 gap-0 border-red w-96 m-5 border-r-amber-200 rounded-xl overflow-hidden">
-			{board.flat().map((piece, index) => (
-				<BoardSquare
-					key={index}
-					piece={piece}
-					index={index}
-					squareColor={squareColor}
-					handleSelectSquare={handleSelectSquare}
-					marking={markingColor(index)}
-				/>
-			))}
-		</div>
+		<>
+			<div className="grid grid-cols-8 gap-0 border-red w-96 m-5 border-r-amber-200 rounded-xl overflow-hidden">
+				{board.flat().map((piece, index) => (
+					<BoardSquare
+						key={index}
+						piece={piece}
+						index={index}
+						squareColor={squareColor}
+						handleSelectSquare={handleSelectSquare}
+						marking={markingColor(index)}
+					/>
+				))}
+			</div>
+			<TurnLabel turn={turn}></TurnLabel>
+		</>
+	);
+}
+function TurnLabel({turn}:{turn: string}){
+	return (
+		<label className="text-white m-5 bg-purple-700 p-4 rounded-lg">
+			
+			{
+				turn==="white"?
+				<span className="bg-white p-2 rounded text-black">{turn} to move</span>:
+				<span className="bg-black p-2 rounded text-white">{turn} to move</span>
+			}
+		</label>
 	);
 }
 
