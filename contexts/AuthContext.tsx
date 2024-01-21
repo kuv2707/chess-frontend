@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import FirebaseApp from "./firebase";
 import {
+	UserCredential,
 	getAuth,
 	signInWithPopup,
 } from "firebase/auth";
@@ -14,7 +15,7 @@ type AuthContextType = {
 	logout: () => void;
 	socket: SocketIOClient.Socket;
 };
-type User = {
+export type User = {
 	email: string;
 	displayName: string;
 	photoURL: string;
@@ -32,26 +33,38 @@ export function AuthContext({ children }: { children: React.ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);
 	const auth = getAuth(FirebaseApp);
 	const provider = new GoogleAuthProvider();
+	useEffect(() => {
+		const result = localStorage.getItem("result");
+		if (result) {
+			const parsed = JSON.parse(result);
+			loginFromResult(parsed);
+		}
+	}, []);
+	function loginFromResult(result: UserCredential){
+		const credential = GoogleAuthProvider.credentialFromResult(result);
+		if (result.user.uid) {
+			socket.connect();
+			socket.emit("login", result.user);
+			console.log("connected socket");
+			setUser({
+				email: result.user.email || "",
+				displayName: result.user.displayName || "",
+				photoURL: result.user.photoURL || "",
+				uid: result.user.uid,
+			});
+		}
+	}
 	const login = () => {
 		console.log("login");
 		signInWithPopup(auth, provider).then((result) => {
-			const credential = GoogleAuthProvider.credentialFromResult(result);
-			console.log(credential, result);
-			if (result.user.uid) {
-				socket.connect();
-				socket.emit("login",result.user);
-				console.log("connected socket")
-				setUser({
-					email: result.user.email || "",
-					displayName: result.user.displayName || "",
-					photoURL: result.user.photoURL || "",
-					uid: result.user.uid,
-				});
-			}
+			localStorage.setItem("result", JSON.stringify(result));
+			loginFromResult(result);
 		});
 	};
 	const logout = () => {
 		setUser(null);
+		localStorage.removeItem("user");
+		socket.disconnect();
 	};
 	const value = { user, login, logout, socket };
 	return (

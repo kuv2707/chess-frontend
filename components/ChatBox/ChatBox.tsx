@@ -1,18 +1,19 @@
 "use client";
-import { useAuth } from "@/contexts/AuthContext";
+import { User, useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import * as SocketIOClient from "socket.io-client";
+import Image from "next/image";
 
 type ChatMessage = {
 	message: string;
-	user: string;
+	user: User;
 	timestamp: Date;
 };
 
 export default function ChatBox() {
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [text, setText] = useState("");
-	const { socket } = useAuth();
+	const { socket, user } = useAuth();
 	useEffect(() => {
 		if (!socket) return;
 		socket.on("message", (message: ChatMessage) => {
@@ -23,8 +24,21 @@ export default function ChatBox() {
 		};
 	}, [socket, messages]);
 	function handleAddMessage() {
+		if (!user) return;
 		socket.emit("message", text);
-        setMessages([...messages, {message: text, user: "me", timestamp: new Date()}]);
+		setMessages([
+			...messages,
+			{
+				message: text,
+				user: {
+					email: user.email,
+					displayName: user.displayName,
+					photoURL: user.photoURL,
+					uid: user.uid,
+				},
+				timestamp: new Date(),
+			},
+		]);
 		setText("");
 	}
 
@@ -33,7 +47,14 @@ export default function ChatBox() {
 			{messages.map((message, i) => {
 				return (
 					<div key={i}>
-						{message.user}: {message.message}
+						<Image
+							alt={message.user.displayName}
+							src={message.user.photoURL}
+							width={50}
+							height={10}
+							className="inline-block rounded-xl mb-2 mr-5"
+						></Image>
+						{message.message}
 					</div>
 				);
 			})}

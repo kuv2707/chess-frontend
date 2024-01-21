@@ -2,6 +2,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import Image from "next/image";
 
 export default function Navbar() {
 	const pathname = usePathname();
@@ -34,8 +35,9 @@ export default function Navbar() {
 					>
 						{user === null ? "login" : "logout"}
 					</button>
-					<label className="p-2 border-2 border-white text-white rounded m-5">
+					<label className="p-2 border-2 border-white text-white rounded m-5 ">
 						{user === null ? "guest" : user.displayName}
+						<Image width={20} height={20} className="inline-block m-2 rounded-xl" src={user?.photoURL||""} alt="user-dp"></Image>
 					</label>
 				</li>
 			</ul>
