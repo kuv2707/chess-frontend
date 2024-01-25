@@ -10,7 +10,8 @@ export default function Navbar() {
 	let routesMap = {
 		"/": "Home",
 		"/about": "About",
-		"/chessboard": "Game",
+		"/play": "Play",
+		// "/chessboard": "Chessboard",
 	};
 	return (
 		<nav className="bg-gradient-to-r from-blue-900 to-purple-900 p-5">
@@ -36,8 +37,8 @@ export default function Navbar() {
 						{user === null ? "login" : "logout"}
 					</button>
 					<label className="p-2 border-2 border-white text-white rounded m-5 ">
-						{user === null ? "guest" : user.displayName}
 						<Image width={20} height={20} className="inline-block m-2 rounded-xl" src={user?.photoURL||"/images/guest.jpg"} alt="user-dp"></Image>
+						{user === null ? "guest" : user.displayName}
 					</label>
 				</li>
 			</ul>
