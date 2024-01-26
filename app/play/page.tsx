@@ -51,18 +51,19 @@ export default function GameOptions() {
 				},
 			}
 		);
-		if (res.status == 404) {
+		if (res.status != 200) {
 			const { message } = await res.json();
 			toast.error(message);
 			setGameId("");
 		} else {
-			const response = await res.json();
-			const sps = new URLSearchParams(response.data);
-			router.push("/chessboard?" + sps.toString());
+			// const response = await res.json();
+			// const sps = new URLSearchParams(response.data);
+			// router.push("/chessboard?" + sps.toString());
 		}
 	};
 
-	function copyHandler() {
+	function copyHandler(e) {
+		e.preventDefault();
 		navigator.clipboard.writeText(hostedGameId);
 		toast.success("Copied to clipboard");
 	}
