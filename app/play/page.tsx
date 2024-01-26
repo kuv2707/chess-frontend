@@ -62,7 +62,7 @@ export default function GameOptions() {
 		}
 	};
 
-	function copyHandler(e) {
+	function copyHandler(e: React.MouseEvent) {
 		e.preventDefault();
 		navigator.clipboard.writeText(hostedGameId);
 		toast.success("Copied to clipboard");

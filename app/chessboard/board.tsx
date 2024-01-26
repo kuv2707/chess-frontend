@@ -49,7 +49,9 @@ function fileName(piece: string) {
 }
 function boardFromFEN(fen: string) {
 	let board = [];
-	let rows = fen.split("/");
+	let info=fen.split(" ");
+	let rows = info[0].split("/");
+	console.log(rows)
 	for (let i = 0; i < 8; i++) {
 		let row = [];
 		for (let j = 0; j < 8; j++) {
@@ -58,19 +60,27 @@ function boardFromFEN(fen: string) {
 					row.push("");
 				}
 			} else {
-				if(rows[i][j])
-				row.push(rows[i][j]);
+				if (rows[i][j]) row.push(rows[i][j]);
 			}
 		}
 		board.push(row);
 	}
 	console.log(board);
-	return board;
+	let turn="";
+	if(info[1]==="b"){
+		turn="black";
+	}else{
+		turn="white";
+	}
+	return {board,turn};
 }
-export default function ChessBoard({ gameInfo }: { gameInfo: GameInfo}) {
+export default function ChessBoard({ gameInfo }: { gameInfo: GameInfo }) {
 	//replace with api call
-	const [board, setBoard] = useState(boardFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"));
-	const [turn, setTurn] = useState("white");
+	let {board: initBoard, turn: initTurn}=boardFromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
+	const [board, setBoard] = useState(
+		initBoard
+	);
+	const [turn, setTurn] = useState(initTurn);
 	const [selectedSquare, setSelectedSquare] = useState<number>(-1);
 	const [allPieceMoves, setAllPieceMoves] = useState<PieceMoves>({});
 	const [selectedPieceDests, setSelectedPieceDests] = useState<number[]>([]);
@@ -78,9 +88,9 @@ export default function ChessBoard({ gameInfo }: { gameInfo: GameInfo}) {
 	const [checkMate, setCheckMate] = useState(false);
 	const [winner, setWinner] = useState(null);
 	const [lastMove, setLastMove] = useState([]);
-	const {user}=useAuth();
+	const { user, socket } = useAuth();
 	useEffect(() => {
-		if(!user) return;
+		if (!user) return;
 		fetch(
 			process.env.NEXT_PUBLIC_MAIN_BACKEND_URL +
 				"api/v1/game/piecewisemoves",
@@ -100,7 +110,20 @@ export default function ChessBoard({ gameInfo }: { gameInfo: GameInfo}) {
 				setAllPieceMoves(data.data);
 			});
 	}, [board, turn]);
-	function markingColor(index: number) : "kill" | "move" | null{
+	useEffect(() => {
+		socket.on("boardUpdate", function (data) {
+			if (!data.fenstring) {
+				return;
+			}
+			let newboard = boardFromFEN(data.fenstring);
+			setBoard(newboard.board);
+			setTurn(newboard.turn);
+		});
+		return function () {
+			socket.off("boardUpdate");
+		};
+	});
+	function markingColor(index: number): "kill" | "move" | null {
 		if (selectedPieceDests.includes(index)) {
 			if (board[Math.floor(index / 8)][index % 8] != "") {
 				return "kill" as const;
@@ -117,21 +140,30 @@ export default function ChessBoard({ gameInfo }: { gameInfo: GameInfo}) {
 			? "bg-amber-200"
 			: "bg-gray-800";
 	}
-	function handleSelectSquare(index: number) {
+	async function handleSelectSquare(index: number) {
+		if (!user) {
+			return;
+		}
+
 		if (selectedSquare != -1) {
 			if (selectedPieceDests.includes(index)) {
-				setBoard((board) => {
-					let newboard = JSON.parse(JSON.stringify(board));
-					newboard[Math.floor(selectedSquare / 8)][
-						selectedSquare % 8
-					] = "";
-					newboard[Math.floor(index / 8)][index % 8] =
-						board[Math.floor(selectedSquare / 8)][
-							selectedSquare % 8
-						];
-					return newboard;
-				});
-				setTurn(turn === "white" ? "black" : "white");
+				let move = moveNotation(selectedSquare, index);
+				console.log(move)
+				fetch(
+					process.env.NEXT_PUBLIC_MAIN_BACKEND_URL +
+						"api/v1/game/makemove",
+					{
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: "Bearer " + user.idToken,
+						},
+						body: JSON.stringify({
+							gameId: gameInfo.gameId,
+							move,
+						}),
+					}
+				);
 			}
 			setSelectedSquare(-1);
 			setSelectedPieceDests([]);
@@ -166,25 +198,42 @@ export default function ChessBoard({ gameInfo }: { gameInfo: GameInfo}) {
 		</>
 	);
 }
-function TurnLabel({turn}:{turn: string}){
+function TurnLabel({ turn }: { turn: string }) {
 	return (
 		<label className="text-white m-5 bg-purple-700 p-4 rounded-lg">
-			
-			{
-				turn==="white"?
-				<span className="bg-white p-2 rounded text-black">{turn} to move</span>:
-				<span className="bg-black p-2 rounded text-white">{turn} to move</span>
-			}
+			{turn === "white" ? (
+				<span className="bg-white p-2 rounded text-black">
+					{turn} to move
+				</span>
+			) : (
+				<span className="bg-black p-2 rounded text-white">
+					{turn} to move
+				</span>
+			)}
 		</label>
 	);
 }
-
-
 
 function encodePos(pos: string) {
 	let x = pos.charCodeAt(0) - 97;
 	let y = 8 - parseInt(pos[1]);
 	return x + y * 8;
+}
+function moveNotation(from: number, to: number) {
+	let x1 = from % 8;
+	let y1 = 8 - Math.floor(from / 8);
+	let x2 = to % 8;
+	let y2 = 8 - Math.floor(to / 8);
+	let move = "";
+	if (x1 != x2) {
+	}
+	move += String.fromCharCode(x1 + 97);
+	if (y1 != y2) {
+	}
+	move += y1;
+	move += String.fromCharCode(x2 + 97);
+	move += y2;
+	return move;
 }
 
 function BoardSquare({
