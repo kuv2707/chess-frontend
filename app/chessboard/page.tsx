@@ -3,11 +3,18 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Board from "./board";
 import ChatBox from "@/components/ChatBox/ChatBox";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { GameInfo } from "../globaltypes";
 import { toast } from "react-toastify";
 
-export default function ChessBoard() {
+export default function ChessboardPage(){
+	return <>
+	<Suspense fallback={<div>Loading...</div>}>
+		<ChessBoard />
+	</Suspense>
+	</>
+}
+function ChessBoard() {
 	const router = useRouter();
 	const sps = useSearchParams();
 	const gameInfo:GameInfo={
