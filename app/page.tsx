@@ -4,7 +4,7 @@ import ChatBox from "@/components/ChatBox/ChatBox";
 export default function Home(){
   return <>
   <div className='text-white'>
-    <ChatBox></ChatBox>
+    Navigate to Play to start a game
   </div>
   </>
 }
