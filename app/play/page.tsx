@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import ChessBoard from "../chessboard/board";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-toastify";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function GameOptions() {
 	const [gameId, setGameId] = useState("");
 	const [hostedGameId, setHostedGameId] = useState("");
-	const { socket, user } = useAuth();
+	const { socket, user, auth } = useAuth();
 	const router = useRouter();
 	useEffect(() => {
 		socket.on("opponentJoined", (data) => {
@@ -26,7 +26,8 @@ export default function GameOptions() {
 			{
 				headers: {
 					"Content-Type": "application/json",
-					Authorization: "Bearer " + user.idToken,
+					Authorization:
+						"Bearer " + (await auth.currentUser?.getIdToken()),
 				},
 			}
 		);
@@ -47,7 +48,8 @@ export default function GameOptions() {
 				body: JSON.stringify({ gameId }),
 				headers: {
 					"Content-Type": "application/json",
-					Authorization: "Bearer " + user.idToken,
+					Authorization:
+						"Bearer " + (await auth.currentUser?.getIdToken()),
 				},
 			}
 		);
@@ -81,7 +83,12 @@ export default function GameOptions() {
 			{hostedGameId && (
 				<div className="p-3 text-white bg-blue-600 rounded-md">
 					{hostedGameId}
-					<button onClick={copyHandler} className="p-3 ml-3 bg-black rounded shadow-lg shadow-black" >Copy</button>
+					<button
+						onClick={copyHandler}
+						className="p-3 ml-3 bg-black rounded shadow-lg shadow-black"
+					>
+						Copy
+					</button>
 				</div>
 			)}
 
@@ -98,7 +105,7 @@ export default function GameOptions() {
 					onClick={joinGame}
 					className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
 				>
-					Join a Game
+					Join Game
 				</button>
 			</div>
 		</form>

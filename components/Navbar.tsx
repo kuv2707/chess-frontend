@@ -38,7 +38,7 @@ export default function Navbar() {
 					</button>
 					<label className="p-2 border-2 border-white text-white rounded m-5 ">
 						<Image width={20} height={20} className="inline-block m-2 rounded-xl" src={user?.photoURL||"/images/guest.jpg"} alt="user-dp"></Image>
-						{user === null ? "guest" : user.displayName}
+						{user === null ? "guest" : user.name}
 					</label>
 				</li>
 			</ul>

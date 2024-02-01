@@ -2,28 +2,32 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import FirebaseApp from "./firebase";
 import {
+	Auth,
 	UserCredential,
+	browserLocalPersistence,
 	getAuth,
 	getIdToken,
+	onAuthStateChanged,
+	setPersistence,
 	signInWithPopup,
+	signOut,
 } from "firebase/auth";
 import { GoogleAuthProvider } from "firebase/auth";
 import { socket } from "@/components/socketio";
 import * as SocketIOClient from "socket.io-client";
-import firebase from "./firebase";
 import { toast } from "react-toastify";
 type AuthContextType = {
 	user: User | null;
 	login: () => void;
 	logout: () => void;
 	socket: SocketIOClient.Socket;
+	auth: Auth;
 };
 export type User = {
 	email: string;
-	displayName: string;
+	name: string;
 	photoURL: string;
 	uid: string;
-	idToken:string;
 };
 
 const authContext = createContext<AuthContextType>({
@@ -31,6 +35,8 @@ const authContext = createContext<AuthContextType>({
 	login: () => {},
 	logout: () => {},
 	socket: socket,
+	auth: getAuth(FirebaseApp),
+	
 });
 
 export function AuthContext({ children }: { children: React.ReactNode }) {
@@ -38,41 +44,47 @@ export function AuthContext({ children }: { children: React.ReactNode }) {
 	const auth = getAuth(FirebaseApp);
 	const provider = new GoogleAuthProvider();
 	useEffect(() => {
-		const result = localStorage.getItem("result");
-		if (result) {
-			const parsed = JSON.parse(result);
-			// loginFromResult(parsed);//TODO: fix this
-		}
-	}, []);
-	async function loginFromResult(result: UserCredential) {
-		const credential = GoogleAuthProvider.credentialFromResult(result);
-		if (!credential) return console.log("no creds");
-		console.log(credential, "creds");
-		toast.success("Logged in as "+result.user.displayName);
-		socket.connect();
-		console.log(result.user);
-		let user : User= {
-			email: result.user.email || "",
-			displayName: result.user.displayName || "",
-			photoURL: result.user.photoURL || "",
-			uid: result.user.uid,
-			idToken: await result.user.getIdToken(true),
-		};
-		socket.emit("login", user);
-		setUser(user);
-	}
-	const login = () => {
-		signInWithPopup(auth, provider).then((result) => {
-			localStorage.setItem("result", JSON.stringify(result));
-			loginFromResult(result);
+		const unsubscribe = onAuthStateChanged(auth, async (user) => {
+			console.log("auth state changed",user)
+			if (user) {
+				const token = await user.getIdToken();
+				const resp = await fetch(
+					process.env.NEXT_PUBLIC_MAIN_BACKEND_URL +
+						"api/v1/auth/login",
+					{
+						method: "POST",
+						body: JSON.stringify({ token }),
+						headers: {
+							"Content-Type": "application/json",
+						},
+					}
+				).then((res) => res.json());
+				if (resp.status == "fail") {
+					toast.error(resp.message);
+					return;
+				}
+				toast.success("Logged in as " + user.displayName);
+				socket.auth={token};
+				socket.connect();
+				resp.data.user.uid=resp.data.user._id;
+				setUser(resp.data.user);
+			} else {
+				setUser(null);
+				socket.disconnect();
+			}
 		});
+
+		return () => unsubscribe();
+	}, []);
+	const login = () => {
+		setPersistence(auth, browserLocalPersistence).then(()=>{
+			signInWithPopup(auth, provider);
+		})
 	};
 	const logout = () => {
-		setUser(null);
-		localStorage.removeItem("result");
-		socket.disconnect();
+		signOut(auth);
 	};
-	const value = { user, login, logout, socket };
+	const value = { user, login, logout, socket, auth };
 	return (
 		<authContext.Provider value={value}>{children}</authContext.Provider>
 	);

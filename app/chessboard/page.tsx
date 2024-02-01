@@ -31,7 +31,7 @@ function ChessBoard() {
 		if (!sps.has("gameId") || !user) {
 			router.push("/play");
 		}
-	}),[]
+	},[])
 
 	return (
 		<>
