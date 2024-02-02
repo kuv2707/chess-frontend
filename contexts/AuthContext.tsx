@@ -79,7 +79,9 @@ export function AuthContext({ children }: { children: React.ReactNode }) {
 	const login = () => {
 		setPersistence(auth, browserLocalPersistence).then(()=>{
 			signInWithPopup(auth, provider);
-		})
+		}).catch((error) => {	
+			console.log(error);
+		});
 	};
 	const logout = () => {
 		signOut(auth);

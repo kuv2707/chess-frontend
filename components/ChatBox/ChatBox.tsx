@@ -92,6 +92,7 @@ export default function ChatBox({ gameId }: { gameId: string }) {
 	}, []);
 	async function handleAddMessage() {
 		if (!user) return;
+		if(text.length===0) return;
 		setEnqueuedMessages([
 			...enqueuedMessages,
 			{
@@ -139,7 +140,7 @@ export default function ChatBox({ gameId }: { gameId: string }) {
 						<div
 							key={i}
 							title={getUser(message.userId).name}
-							className="text-white flex"
+							className="text-white flex items-start"
 							ref={lmr}
 						>
 							<Image

@@ -20,26 +20,42 @@ export default function Navbar() {
 					return (
 						<li
 							key={i}
-							className={
-								" p-2 border-white text-white rounded " +
-								(pathname === entry[0] ? "bg-purple-700" : "")
-							}
+							className={" p-2 border-white text-white rounded "}
 						>
-							<Link href={entry[0]}>{entry[1]}</Link>
+							<Link href={entry[0]}>
+								<button
+									className={
+										"p-2 border-b-2 hover:text-purple-400 " +
+										(pathname === entry[0]
+											? " border-purple-500"
+											: "border-white")
+									}
+								>
+									{entry[1]}
+								</button>
+							</Link>
 						</li>
 					);
 				})}
 				<li>
+					<div className="p-2 border-2 border-white text-white rounded mx-5 inline-block">
+						<Image
+							width={20}
+							height={20}
+							className="inline-block m-2 rounded-xl"
+							src={user?.photoURL || "/images/guest.jpg"}
+							alt="user-dp"
+						></Image>
+						{user === null
+							? "guest"
+							: user.name.split(" ").slice(0, 2).join(" ")}
+					</div>
 					<button
-						className="p-2 border-white text-white rounded bg-yellow-700"
+						className="p-2 border-white text-white rounded bg-purple-700"
 						onClick={user === null ? login : logout}
 					>
 						{user === null ? "login" : "logout"}
 					</button>
-					<label className="p-2 border-2 border-white text-white rounded m-5 ">
-						<Image width={20} height={20} className="inline-block m-2 rounded-xl" src={user?.photoURL||"/images/guest.jpg"} alt="user-dp"></Image>
-						{user === null ? "guest" : user.name}
-					</label>
 				</li>
 			</ul>
 		</nav>
