@@ -88,17 +88,19 @@ export default function ChessBoard({ gameInfo }: { gameInfo: GameInfo }) {
 	const [checkMate, setCheckMate] = useState(false);
 	const [winner, setWinner] = useState(null);
 	const [lastMove, setLastMove] = useState([]);
-	const { user, socket } = useAuth();
+	const { user, socket, auth } = useAuth();
 	useEffect(() => {
 		if (!user) return;
-		fetch(
+		(async function(){
+			fetch(
 			process.env.NEXT_PUBLIC_MAIN_BACKEND_URL +
 				"api/v1/game/piecewisemoves",
 			{
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					Authorization: "Bearer " + user.idToken,
+					Authorization:
+						"Bearer " + (await auth.currentUser?.getIdToken()),
 				},
 				body: JSON.stringify({ fen: fenString(board, turn) }),
 			}
@@ -109,6 +111,7 @@ export default function ChessBoard({ gameInfo }: { gameInfo: GameInfo }) {
 			.then((data) => {
 				setAllPieceMoves(data.data);
 			});
+		})()
 	}, [board, turn]);
 	useEffect(() => {
 		socket.on("boardUpdate", function (data) {
@@ -156,7 +159,9 @@ export default function ChessBoard({ gameInfo }: { gameInfo: GameInfo }) {
 						method: "POST",
 						headers: {
 							"Content-Type": "application/json",
-							Authorization: "Bearer " + user.idToken,
+							Authorization:
+								"Bearer " +
+								(await auth.currentUser?.getIdToken()),
 						},
 						body: JSON.stringify({
 							gameId: gameInfo.gameId,
