@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function Home() {
   return (
     <>
-      <div className="container mx-20">
+      <div className="container">
         <h2 className="text-3xl font-bold mt-8 text-white">
           Welcome to the Chess Platform
         </h2>

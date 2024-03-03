@@ -24,7 +24,9 @@ export default function RootLayout({
 				<ToastContainer />
 				<AuthContext>
 					<Navbar />
-					{children}
+					<div className="px-20">
+						{children}
+					</div>
 				</AuthContext>
 			</body>
 		</html>

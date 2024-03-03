@@ -22,7 +22,7 @@ export default function GameOptions() {
 	const hostGame = async () => {
 		if (user === null) return;
 		const res = await fetch(
-			process.env.NEXT_PUBLIC_MAIN_BACKEND_URL + "api/v1/game/newgame",
+			process.env.NEXT_PUBLIC_MAIN_BACKEND_URL + "api/v1/game/newgame/2player",
 			{
 				headers: {
 					"Content-Type": "application/json",
@@ -64,6 +64,29 @@ export default function GameOptions() {
 		}
 	};
 
+	async function playEngine() {
+		{
+			if (user === null) return;
+			const res = await fetch(
+				process.env.NEXT_PUBLIC_MAIN_BACKEND_URL +
+					"api/v1/game/newgame/engine",
+				{
+					headers: {
+						"Content-Type": "application/json",
+						Authorization:
+							"Bearer " + (await auth.currentUser?.getIdToken()),
+					},
+				}
+			);
+			const game = await res.json();
+			if (game.status === "fail") {
+				toast.error(game.message);
+				return;
+			}
+			setHostedGameId(game.data.id);
+		}
+	}
+
 	function copyHandler(e: React.MouseEvent) {
 		e.preventDefault();
 		navigator.clipboard.writeText(hostedGameId);
@@ -72,6 +95,14 @@ export default function GameOptions() {
 
 	return (
 		<form className="flex flex-col items-center justify-center space-y-4 m-5">
+			<button
+				type="button"
+				onClick={playEngine}
+				disabled={user === null}
+				className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+			>
+				Play with engine
+			</button>
 			<button
 				type="button"
 				onClick={hostGame}

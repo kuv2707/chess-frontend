@@ -51,7 +51,6 @@ function boardFromFEN(fen: string) {
 	let board = [];
 	let info=fen.split(" ");
 	let rows = info[0].split("/");
-	console.log(rows)
 	for (let i = 0; i < 8; i++) {
 		let row = [];
 		for (let j = 0; j < 8; j++) {
@@ -65,7 +64,6 @@ function boardFromFEN(fen: string) {
 		}
 		board.push(row);
 	}
-	console.log(board);
 	let turn="";
 	if(info[1]==="b"){
 		turn="black";
@@ -91,6 +89,7 @@ export default function ChessBoard({ gameInfo }: { gameInfo: GameInfo }) {
 	const { user, socket, auth } = useAuth();
 	useEffect(() => {
 		if (!user) return;
+		const controller = new AbortController();
 		(async function(){
 			fetch(
 			process.env.NEXT_PUBLIC_MAIN_BACKEND_URL +
@@ -103,15 +102,20 @@ export default function ChessBoard({ gameInfo }: { gameInfo: GameInfo }) {
 						"Bearer " + (await auth.currentUser?.getIdToken()),
 				},
 				body: JSON.stringify({ fen: fenString(board, turn) }),
-			}
+				signal: controller.signal,
+			},
 		)
 			.then((res) => {
 				return res.json();
 			})
 			.then((data) => {
+				console.log(data,board)
 				setAllPieceMoves(data.data);
 			});
 		})()
+		return function () {
+			controller.abort("");
+		};
 	}, [board, turn]);
 	useEffect(() => {
 		socket.on("boardUpdate", function (data) {
@@ -147,11 +151,9 @@ export default function ChessBoard({ gameInfo }: { gameInfo: GameInfo }) {
 		if (!user) {
 			return;
 		}
-
 		if (selectedSquare != -1) {
 			if (selectedPieceDests.includes(index)) {
 				let move = moveNotation(selectedSquare, index);
-				console.log(move)
 				fetch(
 					process.env.NEXT_PUBLIC_MAIN_BACKEND_URL +
 						"api/v1/game/makemove",
