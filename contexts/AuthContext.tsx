@@ -7,9 +7,11 @@ import {
 	browserLocalPersistence,
 	getAuth,
 	getIdToken,
+	getRedirectResult,
 	onAuthStateChanged,
 	setPersistence,
 	signInWithPopup,
+	signInWithRedirect,
 	signOut,
 } from "firebase/auth";
 import { GoogleAuthProvider } from "firebase/auth";
@@ -76,9 +78,14 @@ export function AuthContext({ children }: { children: React.ReactNode }) {
 
 		return () => unsubscribe();
 	}, []);
+
+
+	useEffect(()=>{
+		getRedirectResult(auth);
+	},[])
 	const login = () => {
 		setPersistence(auth, browserLocalPersistence).then(()=>{
-			signInWithPopup(auth, provider);
+			signInWithRedirect(auth, provider);
 		}).catch((error) => {	
 			console.log(error);
 		});

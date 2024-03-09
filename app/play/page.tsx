@@ -83,7 +83,6 @@ export default function GameOptions() {
 				toast.error(game.message);
 				return;
 			}
-			setHostedGameId(game.data.id);
 		}
 	}
 
